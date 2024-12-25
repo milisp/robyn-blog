@@ -19,6 +19,12 @@
 └── uv.lock
 ```
 
+## python versin
+
+```
+python version >= 3.9, <= 3.12 
+```
+
 ## install and start server
 
 <details>
