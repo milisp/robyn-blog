@@ -1,28 +1,34 @@
 from robyn import Request, Robyn
 
 from database import BlogPost, Session, User
-from security import (create_access_token, decode_access_token, hash_password,
-                      verify_password)
+from security import (
+    create_access_token,
+    decode_access_token,
+    hash_password,
+    verify_password,
+)
 
 app = Robyn(__file__)
 session = Session()
+
 
 # Helper 函数：获取并验证 Token
 def get_current_user(request: Request):
     token = request.headers.get("Authorization")
     if not token:
         return None, {"status": "error", "message": "请提供认证令牌"}
-    
+
     decoded = decode_access_token(token)
     if not decoded:
         return None, {"status": "error", "message": "认证失败"}
-    
+
     user_id = decoded.get("user_id")
     user = session.query(User).filter_by(id=user_id).first()
     if not user:
         return None, {"status": "error", "message": "用户不存在"}
-    
+
     return user, None
+
 
 # 注册用户
 @app.post("/register")
@@ -39,6 +45,7 @@ async def register(request: Request):
     session.add(user)
     session.commit()
     return {"status": "success", "message": "注册成功"}
+
 
 # 登录用户
 @app.post("/login")
@@ -63,7 +70,12 @@ async def get_posts(request: Request):
 
     posts = session.query(BlogPost).offset((page - 1) * per_page).limit(per_page).all()
     return [
-        {"id": post.id, "title": post.title, "content": post.content, "author": post.author.username}
+        {
+            "id": post.id,
+            "title": post.title,
+            "content": post.content,
+            "author": post.author.username,
+        }
         for post in posts
     ]
 
@@ -74,7 +86,12 @@ async def get_post(request: Request):
     post = session.query(BlogPost).filter_by(id=post_id).first()
     if not post:
         return {"status": "error", "message": "文章不存在或无权限"}
-    return {"id": post.id, "title": post.title, "content": post.content, "author": post.author.username}
+    return {
+        "id": post.id,
+        "title": post.title,
+        "content": post.content,
+        "author": post.author.username,
+    }
 
 
 @app.post("/posts")
@@ -91,6 +108,7 @@ async def create_post(request: Request):
     session.add(post)
     session.commit()
     return {"status": "success", "message": "文章创建成功"}
+
 
 @app.put("/posts/:post_id")
 async def update_post(request: Request):
@@ -109,6 +127,7 @@ async def update_post(request: Request):
     session.commit()
     return {"status": "success", "message": "文章更新成功"}
 
+
 @app.delete("/posts/:post_id")
 async def delete_post(request: Request):
     user, error = get_current_user(request)
@@ -123,6 +142,7 @@ async def delete_post(request: Request):
     session.delete(post)
     session.commit()
     return {"status": "success", "message": "文章删除成功"}
+
 
 if __name__ == "__main__":
     app.start()
